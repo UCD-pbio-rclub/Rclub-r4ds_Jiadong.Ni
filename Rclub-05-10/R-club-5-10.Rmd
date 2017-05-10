@@ -1,0 +1,42 @@
+```{r}
+library(tidyverse)
+
+filter(flights, month == 1, day == 1)
+jan1 <- filter(flights, month == 1, day == 1)
+(dec25 <- filter(flights, month == 12, day == 25))
+sqrt(2) ^ 2 == 2
+filter(flights, month == 11 | month == 12)
+nov_dec <- filter(flights, month %in% c(11, 12))     
+#NA == NA
+is.na(x)
+
+#Exercise 5.2.4
+filter(flights, dep_delay %in% c(1,2))
+?flights
+filter(flights, dest %in% c("IAH","HOU"))
+filter(flights, carrier %in% c("UA","AA", "DL"))
+filter(flights, month %in% c(7,8,9))
+filter(flights, arr_delay >= 1, dep_delay == 0)
+filter(flights, dep_time >= 0, dep_delay <= 600)
+#between help us to filter the scale of a certain variable
+filter(flights, between(dep_time, 0, 600))
+filter(flights, is.na(dep_time))
+#8245 with missing dep_time
+NA^0
+#??
+
+arrange(flights, year, month, day)
+?is.na
+is.na(x) <- -1
+arrange(flights, desc(x))
+
+arrange(flights, desc(arr_delay))
+arrange(flights, desc(arr_delay))
+
+
+select(flights, year, month, day)
+rename(flights, tail_num = tailnum)
+
+select(flights, dep_time, dep_delay, arr_time,)
+
+```
