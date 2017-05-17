@@ -1,0 +1,240 @@
+---
+title: "Exercise"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+by_day <- group_by(flights, year, month, day)
+summarise(by_day, delay = mean(dep_delay, na.rm = TRUE))
+by_dest <- group_by(flights, dest)
+delay <- summarise(by_dest,
+  count = n(),
+  dist = mean(distance, na.rm = TRUE),
+  delay = mean(arr_delay, na.rm = TRUE)
+)
+delay <- filter(delay, count > 20, dest != "HNL")
+
+ggplot(data = delay, mapping = aes(x = dist, y = delay)) +
+  geom_point(aes(size = count), alpha = 1/3) +
+  geom_smooth(se = FALSE)
+
+delays <- flights %>% 
+  group_by(dest) %>% 
+  summarise(
+    count = n(),
+    dist = mean(distance, na.rm = TRUE),
+    delay = mean(arr_delay, na.rm = TRUE)
+  ) %>% 
+  filter(count > 20, dest != "HNL")
+
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarise(mean = mean(dep_delay))
+#get rid of the missing values
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarise(mean = mean(dep_delay, na.rm = TRUE))
+
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(mean = mean(dep_delay))
+
+delays <- not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarise(
+    delay = mean(arr_delay)
+  )
+
+ggplot(data = delays, mapping = aes(x = delay)) + 
+  geom_freqpoly(binwidth = 10)
+
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(
+    avg_delay1 = mean(arr_delay),
+    avg_delay2 = mean(arr_delay[arr_delay > 0]) # the average positive delay
+  )
+
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(distance_sd = sd(distance)) %>% 
+  arrange(desc(distance_sd))
+
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(
+    first = min(dep_time),
+    last = max(dep_time)
+  )
+
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(
+    first_dep = first(dep_time), 
+    last_dep = last(dep_time)
+  )
+
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  mutate(r = min_rank(desc(dep_time))) %>% 
+  filter(r %in% range(r))
+
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(carriers = n_distinct(carrier)) %>% 
+  arrange(desc(carriers))
+
+not_cancelled %>% 
+  count(dest)
+
+not_cancelled %>% 
+  count(tailnum, wt = distance)
+
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(n_early = sum(dep_time < 500))
+
+daily <- group_by(flights, year, month, day)
+
+(per_day   <- summarise(daily, flights = n()))
+
+(per_month <- summarise(per_day, flights = sum(flights)))
+
+(per_year  <- summarise(per_month, flights = sum(flights)))
+
+daily %>% 
+  ungroup() %>%             # no longer grouped by date
+  summarise(flights = n())  # all flights  
+
+#Exercise 5.6.7
+#1-1
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+not_cancelled %>%
+  group_by(flight) %>%
+  summarize(early_15_min = mean(arr_delay <= -15), late_15_min = mean(arr_delay >= 15)) %>%
+  filter(early_15_min == 0.5, late_15_min == 0.5)
+
+#1-2
+not_cancelled %>%
+  group_by(flight) %>%
+  summarize(late_10_min = mean(arr_delay == 10)) %>% 
+  filter(late_10_min == 1)
+
+#1-3
+not_cancelled %>%
+  group_by(flight) %>%
+  summarize(early_30_min = mean(arr_delay <= -30), late_30_min = mean(arr_delay >= 30)) %>%
+  filter(early_30_min == 0.5, late_30_min == 0.5)
+
+#1-4
+not_cancelled %>%
+  group_by(flight) %>%
+  summarize(on_time = mean(arr_delay == 0), late_2_hr = mean(arr_delay >= 120)) %>%
+  filter(on_time == 0.99, late_2_hr == 0.01)
+
+#2
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+#by using count(dest)
+not_cancelled %>%
+  count(dest)
+
+#modified
+not_cancelled %>%
+  group_by(dest) %>%
+  summarize(n = n())
+
+#by using count(tailnum, wt = distance)
+not_cancelled %>%
+  count(tailnum, wt = distance)
+
+#modified
+not_cancelled %>%
+  group_by(tailnum) %>%
+  summarize(n = sum(distance))
+
+#3
+#dep_delay is the most important column, in case of accident, there will be some flights that do not arrive.
+
+#4
+
+flights %>%
+  group_by(year, month, day) %>%
+  summarize(prop_canceled = mean(is.na(dep_delay)) ,
+            avg_delay = mean(dep_delay, na.rm = TRUE))
+#5
+flights %>%
+  group_by(carrier) %>%
+  summarize(mean_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  arrange(desc(mean_delay))
+
+#F9 is the worst
+
+flights %>%
+  group_by(carrier, dest) %>%
+  summarize(mean_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  group_by(carrier) %>%
+  summarize(mean_delay_mad = mad(mean_delay, na.rm = TRUE)) %>%
+  arrange(desc(mean_delay_mad))
+
+#still confused
+
+#6
+?count()
+
+#SORT if TRUE will sort output in descending order of n
+
+flights_sml <- select(flights, 
+  year:day, 
+  ends_with("delay"), 
+  distance, 
+  air_time
+)
+mutate(flights_sml,
+  gain = arr_delay - dep_delay,
+  speed = distance / air_time * 60
+)
+
+flights_sml %>% 
+  group_by(year, month, day) %>%
+  filter(rank(desc(arr_delay)) < 10)
+
+popular_dests <- flights %>% 
+  group_by(dest) %>% 
+  filter(n() > 365)
+popular_dests
+
+popular_dests %>% 
+  filter(arr_delay > 0) %>% 
+  mutate(prop_delay = arr_delay / sum(arr_delay)) %>% 
+  select(year:day, dest, arr_delay, prop_delay)
+
+#Excercise 5.7.1
+
+#1
+?mutate()
+?filter()
+
+#2
+flights %>% 
+  group_by(tailnum) %>%
+  filter(rank(desc(arr_delay)) < 10) %>%
+  arrange(desc(arr_delay))
+#N384HA is the worst
+
+
+```
+
+
